@@ -3,7 +3,8 @@ import generatePayload from 'promptpay-qr';
 import { db } from '@/lib/db';
 import { ok, fail, guard } from '@/lib/http';
 import { checkSlot } from '@/lib/time';
-import { loadRules, priceOf } from '@/lib/rules';
+import { loadRules, priceOf, loadAdvanceDays } from '@/lib/rules';
+import { expandRecurring } from '@/lib/recurring';
 import { expireOld } from '@/lib/expire';
 
 export const dynamic = 'force-dynamic';
@@ -21,14 +22,20 @@ export const POST = guard(async (req) => {
   if (!/^0\d{8,9}$/.test(phone)) return fail('กรอกเบอร์โทรให้ถูกต้อง');
   if (owner.length < 16 || owner.length > 64) return fail('ข้อมูลไม่ถูกต้อง');
 
+  const maxAhead = (await loadAdvanceDays()) - 1;
   const seen = new Set();
   for (const s of slots) {
-    const e = checkSlot(s);
+    const e = checkSlot(s, { maxAhead });
     if (e) return fail(e);
     const k = `${s.d}|${s.c}|${s.h}`;
     if (seen.has(k)) return fail('มีช่องซ้ำกัน');
     seen.add(k);
   }
+
+  // ห้ามจองทับเวลาก๊วนประจำ
+  const ds = slots.map((s) => s.d).sort();
+  const rec = new Set((await expandRecurring(ds[0], ds[ds.length - 1])).map((r) => `${r.d}|${r.c}|${r.h}`));
+  if ([...seen].some((k) => rec.has(k))) return fail('ช่องที่เลือกเป็นเวลาของก๊วนประจำ เลือกช่องอื่นได้เลย', 409);
 
   await expireOld();
   const rules = await loadRules();

@@ -1,17 +1,16 @@
 import { db } from '@/lib/db';
-import { ok, fail, guard } from '@/lib/http';
-import { isAdmin } from '@/lib/auth';
-import { loadRules, loadRefundHours, checkRules } from '@/lib/rules';
+import { ok, fail, adminGuard } from '@/lib/http';
+import { loadRules, loadRefundHours, loadAdvanceDays, checkRules } from '@/lib/rules';
 
 export const dynamic = 'force-dynamic';
 
-export const GET = guard(async (req) => {
-  if (!isAdmin(req)) return fail('ต้องเข้าสู่ระบบ', 401);
-  return ok({ rules: await loadRules(), refundHours: await loadRefundHours() });
-});
+// ราคาและการตั้งค่า: เฉพาะเจ้าของร้าน
+export const GET = adminGuard(async () => {
+  const [rules, refundHours, advanceDays] = await Promise.all([loadRules(), loadRefundHours(), loadAdvanceDays()]);
+  return ok({ rules, refundHours, advanceDays });
+}, { ownerOnly: true });
 
-export const PUT = guard(async (req) => {
-  if (!isAdmin(req)) return fail('ต้องเข้าสู่ระบบ', 401);
+export const PUT = adminGuard(async (req) => {
   const body = await req.json().catch(() => null);
   if (!body) return fail('ข้อมูลไม่ถูกต้อง');
 
@@ -30,5 +29,11 @@ export const PUT = guard(async (req) => {
     const up = await db().from('settings').upsert({ key: 'refund_hours', value: String(n) });
     if (up.error) throw up.error;
   }
+  if (body.advanceDays !== undefined) {
+    const n = Number(body.advanceDays);
+    if (!Number.isInteger(n) || n < 1 || n > 60) return fail('จำนวนวันต้องเป็นเลข 1 ถึง 60');
+    const up = await db().from('settings').upsert({ key: 'advance_days', value: String(n) });
+    if (up.error) throw up.error;
+  }
   return ok({ ok: true });
-});
+}, { ownerOnly: true });

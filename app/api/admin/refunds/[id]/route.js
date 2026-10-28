@@ -1,11 +1,9 @@
 import { db } from '@/lib/db';
-import { ok, fail, guard } from '@/lib/http';
-import { isAdmin } from '@/lib/auth';
+import { ok, fail, adminGuard } from '@/lib/http';
 
 export const dynamic = 'force-dynamic';
 
-export const POST = guard(async (req, { params }) => {
-  if (!isAdmin(req)) return fail('ต้องเข้าสู่ระบบ', 401);
+export const POST = adminGuard(async (req, { params }) => {
   const body = await req.json().catch(() => null);
   const done = !!(body && body.done);
   const { error } = await db()

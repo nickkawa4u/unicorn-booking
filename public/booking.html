@@ -1,3 +1,8 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>จองสนาม Unicorn Badminton</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -53,6 +58,7 @@
   color-scheme: dark;
 }
 
+[hidden] { display: none !important; }
 * { box-sizing: border-box; }
 body {
   background: var(--bg);
@@ -361,7 +367,7 @@ h2 { font: 700 17px/1.3 var(--font-display); margin: 0 0 10px; }
   var DOW_S = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
   var MON_L = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
   var MON_S = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-  var NDAYS = 14;
+  var NDAYS = 14; // ค่าจริงมาจากหลังบ้าน (จองล่วงหน้าได้กี่วัน)
 
   function $(id) { return document.getElementById(id); }
   function baht(n) { return Math.round(n).toLocaleString('en-US'); }
@@ -442,6 +448,7 @@ h2 { font: 700 17px/1.3 var(--font-display); margin: 0 0 10px; }
       }
       var j = r.j;
       rules = j.rules; refundHours = j.refundHours; skew = j.now - Date.now();
+      if (j.days) NDAYS = j.days;
       busy = {};
       j.busy.forEach(function (b) { busy[key(b.d, b.c, b.h)] = b.k; });
       buildDays(j.today);

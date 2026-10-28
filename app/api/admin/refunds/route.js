@@ -1,11 +1,9 @@
 import { db } from '@/lib/db';
-import { ok, fail, guard } from '@/lib/http';
-import { isAdmin } from '@/lib/auth';
+import { ok, fail, adminGuard } from '@/lib/http';
 
 export const dynamic = 'force-dynamic';
 
-export const GET = guard(async (req) => {
-  if (!isAdmin(req)) return fail('ต้องเข้าสู่ระบบ', 401);
+export const GET = adminGuard(async (req) => {
   const { data, error } = await db()
     .from('bookings')
     .select('id,court_id,booking_date,start_hour,refund_status,refund_amount,cancelled_at,orders(customer_name,phone)')

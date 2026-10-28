@@ -1,12 +1,11 @@
 import { db } from '@/lib/db';
-import { ok, fail, guard } from '@/lib/http';
-import { isAdmin } from '@/lib/auth';
+import { ok, adminGuard } from '@/lib/http';
 import { bkk, addDays } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 
-export const GET = guard(async (req) => {
-  if (!isAdmin(req)) return fail('ต้องเข้าสู่ระบบ', 401);
+// รายได้: เฉพาะเจ้าของร้าน
+export const GET = adminGuard(async () => {
   const today = bkk().iso;
   const from = addDays(today, -6);
   // นับเฉพาะรายการที่ชำระแล้วและไม่ได้คืนเงิน
@@ -27,4 +26,4 @@ export const GET = guard(async (req) => {
     rows: data.map((b) => ({ d: b.booking_date, c: b.court_id, h: b.start_hour, price: b.price })),
     dueAmount: due.data.reduce((a, r) => a + r.refund_amount, 0),
   });
-});
+}, { ownerOnly: true });

@@ -1,3 +1,8 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>หลังบ้าน Unicorn Badminton</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,6 +50,7 @@
   --ok: #7FD9A0; --ok-bg: #143824; --bar: #6B9BFF;
   color-scheme: dark;
 }
+[hidden] { display: none !important; }
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font-body); }
 button, input, select { font: inherit; color: inherit; }
@@ -74,7 +80,7 @@ h3 { font: 700 15px/1.3 var(--font-display); margin: 0 0 8px; }
 .top b { font: 700 18px/1.2 var(--font-display); display: block; }
 .top span { font-size: 12px; color: var(--head-muted); }
 .top .btn { background: transparent; border: 1px solid #3a4a6e; color: var(--head-ink); padding: 7px 12px; font-size: 13px; }
-.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 4px; margin: 14px 0 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; margin: 14px 0 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
 .tab { border: 0; background: transparent; padding: 9px 2px; border-radius: 9px; font-weight: 600; font-size: 13px; color: var(--muted); cursor: pointer; position: relative; }
 .tab[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
 .badge { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 3px; border-radius: 9px; background: var(--danger); color: var(--on-danger); font-size: 11px; line-height: 18px; }
@@ -123,6 +129,16 @@ main { padding-bottom: 90px; }
 .strip div { padding: 6px 0; border-radius: 6px; background: var(--band1); color: var(--band-ink); font-weight: 600; }
 .strip small { display: block; font-weight: 400; opacity: .8; }
 
+/* groups and admins */
+.flabel { font-size: 13px; color: var(--muted); }
+.courts { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.cbtn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; height: 44px; font-weight: 600; cursor: pointer; }
+.cbtn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.skips { display: flex; flex-wrap: wrap; gap: 6px; }
+.skip { font-size: 12px; border: 1px dashed var(--line); border-radius: 999px; padding: 4px 10px; background: transparent; cursor: pointer; color: var(--muted); }
+.who-chip { font-size: 11px; color: var(--muted); }
+
 /* refunds */
 .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .item { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 8px; }
@@ -162,7 +178,11 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
   </div>
   <form class="card" id="login-form" novalidate>
     <div class="field">
-      <label for="pw">รหัสผ่านแอดมิน</label>
+      <label for="un">ชื่อผู้ใช้</label>
+      <input class="in" id="un" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="เช่น admin">
+    </div>
+    <div class="field">
+      <label for="pw">รหัสผ่าน</label>
       <input class="in" id="pw" type="password" autocomplete="current-password" placeholder="รหัสผ่าน">
       <div class="err" id="pw-err" role="alert" hidden></div>
     </div>
@@ -173,16 +193,18 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
 <div id="app" hidden>
   <header class="top">
     <div class="wrap">
-      <div><b>หลังบ้าน</b><span>Unicorn Badminton</span></div>
+      <div><b>หลังบ้าน</b><span id="who">Unicorn Badminton</span></div>
       <button class="btn" id="logout" type="button">ออกจากระบบ</button>
     </div>
   </header>
   <main class="wrap">
     <nav class="tabs" aria-label="เมนูหลังบ้าน">
       <button type="button" class="tab" data-tab="schedule" aria-pressed="true">ตารางจอง</button>
-      <button type="button" class="tab" data-tab="prices" aria-pressed="false">ราคา</button>
+      <button type="button" class="tab" data-tab="groups" aria-pressed="false">ก๊วนประจำ</button>
       <button type="button" class="tab" data-tab="refunds" aria-pressed="false">คืนเงิน<span class="badge" id="rf-badge" hidden></span></button>
-      <button type="button" class="tab" data-tab="revenue" aria-pressed="false">รายได้</button>
+      <button type="button" class="tab" data-tab="prices" data-owner aria-pressed="false">ราคา/ตั้งค่า</button>
+      <button type="button" class="tab" data-tab="revenue" data-owner aria-pressed="false">รายได้</button>
+      <button type="button" class="tab" data-tab="admins" data-owner aria-pressed="false">แอดมิน</button>
     </nav>
 
     <section id="v-schedule">
@@ -193,11 +215,43 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
         <li><span class="sw"></span>ว่าง</li>
         <li><span class="sw s"></span>เลือกเพื่อล็อก</li>
         <li><span class="sw b"></span>ลูกค้าจอง</li>
-        <li><span class="sw k"></span>ล็อกก๊วน</li>
+        <li><span class="sw k"></span>ล็อก / ก๊วนประจำ</li>
       </ul>
       <div class="board"><div class="grid" id="grid"></div></div>
-      <p class="muted" style="margin:8px 2px 0">แตะช่องว่างเพื่อเลือกล็อกสนาม แตะช่องที่ถูกจองหรือถูกล็อกเพื่อดูรายละเอียด</p>
+      <p class="muted" style="margin:8px 2px 0">แตะช่องว่างเพื่อเลือกล็อกสนาม · แตะช่องสีชมพูเพื่อ<b>ปลดล็อก</b> · แตะช่องที่ลูกค้าจองเพื่อดูรายละเอียด</p>
       <div class="panel" id="panel"></div>
+    </section>
+
+    <section id="v-groups" hidden>
+      <h2>ก๊วนประจำ</h2>
+      <p class="muted" style="margin-top:-4px">ล็อกสนามทุกสัปดาห์ไปเรื่อยๆ จนกว่าจะลบ ลูกค้าจะจองช่องนี้ไม่ได้ ถ้าสัปดาห์ไหนก๊วนไม่มา ไปที่แท็บตารางจอง แตะช่องของก๊วนวันนั้น แล้วกด "งดเฉพาะวันนี้"</p>
+      <form class="card" id="g-form" novalidate>
+        <h3 style="margin:0">เพิ่มก๊วนประจำ</h3>
+        <div class="field"><label for="g-note">ชื่อก๊วน</label><input class="in" id="g-note" type="text" maxlength="40" placeholder="เช่น ก๊วนพี่เอ"></div>
+        <div class="field"><label for="g-dow">ทุกวัน</label><select class="in" id="g-dow"></select></div>
+        <div class="field"><span class="flabel">สนาม (เลือกได้หลายสนาม)</span><div class="courts" id="g-courts"></div></div>
+        <div class="two">
+          <div class="field"><label for="g-from">เวลาเริ่ม</label><select class="in" id="g-from"></select></div>
+          <div class="field"><label for="g-to">ถึง</label><select class="in" id="g-to"></select></div>
+        </div>
+        <div class="err" id="g-err" role="alert" hidden></div>
+        <button class="btn" id="g-save" type="submit">บันทึกก๊วนประจำ</button>
+      </form>
+      <h3 style="margin:18px 0 8px">ก๊วนประจำทั้งหมด</h3>
+      <ul class="list" id="g-list"></ul>
+    </section>
+
+    <section id="v-admins" hidden>
+      <h2>แอดมิน</h2>
+      <p class="muted" style="margin-top:-4px">แอดมินแต่ละคนมีชื่อผู้ใช้และรหัสของตัวเอง ดูตาราง ล็อก/ปลดล็อกสนาม จัดการก๊วนประจำ และดูรายการคืนเงินได้ แต่แก้ราคา ดูรายได้ และเพิ่มแอดมินไม่ได้</p>
+      <ul class="list" id="a-list"></ul>
+      <form class="card" id="a-form" novalidate style="margin-top:16px">
+        <h3 style="margin:0">เพิ่มแอดมิน</h3>
+        <div class="field"><label for="a-user">ชื่อผู้ใช้ (ภาษาอังกฤษหรือตัวเลข)</label><input class="in" id="a-user" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="20" placeholder="เช่น staff1"></div>
+        <div class="field"><label for="a-pass">รหัสผ่าน (อย่างน้อย 6 ตัว)</label><input class="in" id="a-pass" type="text" autocomplete="new-password" maxlength="64"></div>
+        <div class="err" id="a-err" role="alert" hidden></div>
+        <button class="btn" id="a-save" type="submit">เพิ่มแอดมิน</button>
+      </form>
     </section>
 
     <section id="v-prices" hidden>
@@ -216,6 +270,15 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
         </div>
         <div class="err" id="refund-err" hidden>กรอกจำนวนชั่วโมงเป็นเลข 0 ถึง 168</div>
         <button class="btn" id="save-refund" type="button">บันทึกเงื่อนไข</button>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3 style="margin:0">จองล่วงหน้า</h3>
+        <div class="field">
+          <label for="adv-d">ลูกค้าจองล่วงหน้าได้กี่วัน (นับวันนี้ด้วย)</label>
+          <input class="in" id="adv-d" type="number" inputmode="numeric" min="1" max="60" step="1" value="14">
+        </div>
+        <div class="err" id="adv-err" hidden>กรอกจำนวนวันเป็นเลข 1 ถึง 60</div>
+        <button class="btn" id="save-adv" type="button">บันทึกจำนวนวัน</button>
       </div>
     </section>
 
@@ -279,7 +342,12 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
     return { iso: dt.toISOString().slice(0, 10), dow: dt.getUTCDay(), d: dt.getUTCDate(), m: dt.getUTCMonth(), off: off };
   }
   var days = [];
-  for (var i = -6; i <= 13; i++) days.push(mk(i));
+  function buildDays(adv) {
+    days = [];
+    var last = Math.max(13, (adv || 14) - 1);
+    for (var i = -6; i <= last; i++) days.push(mk(i));
+  }
+  buildDays(14);
   var todayIso = mk(0).iso;
   var active = mk(0);
   function dayShort(iso) {
@@ -297,21 +365,33 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
   }
 
   /* ---------- login ---------- */
+  var me = { u: '', role: 'staff' };
+  function isOwner() { return me.role === 'owner'; }
   function showLogin() { $('app').hidden = true; $('login').hidden = false; }
-  function showApp() { $('login').hidden = true; $('app').hidden = false; fromHash(); loadRefundBadge(); }
+  function showApp(info) {
+    me = { u: info.u, role: info.role };
+    buildDays(info.advanceDays);
+    $('who').textContent = me.u + (isOwner() ? ' · เจ้าของร้าน' : ' · แอดมิน');
+    Array.prototype.forEach.call(document.querySelectorAll('.tab[data-owner]'), function (b) { b.hidden = !isOwner(); });
+    $('login').hidden = true; $('app').hidden = false; fromHash(); loadRefundBadge();
+  }
+  function enter() { return api('/api/admin/me', { cache: 'no-store' }).then(function (r) { if (r.ok) showApp(r.j); return r.ok; }); }
+  try { $('un').value = localStorage.getItem('uni-admin-user') || ''; } catch (e) {}
   $('login-form').addEventListener('submit', function (e) {
     e.preventDefault();
-    var pw = $('pw').value;
+    var un = $('un').value.trim().toLowerCase(), pw = $('pw').value;
+    if (!un) { $('pw-err').textContent = 'กรอกชื่อผู้ใช้'; $('pw-err').hidden = false; $('un').focus(); return; }
     if (pw.length < 1) { $('pw-err').textContent = 'กรอกรหัสผ่าน'; $('pw-err').hidden = false; $('pw').focus(); return; }
     $('login-btn').disabled = true;
-    send('POST', '/api/admin/login', { password: pw }).then(function (r) {
-      $('login-btn').disabled = false;
-      if (!r.ok) { $('pw-err').textContent = r.j.error || 'เข้าสู่ระบบไม่สำเร็จ'; $('pw-err').hidden = false; $('pw').setAttribute('aria-invalid', 'true'); $('pw').focus(); return; }
+    send('POST', '/api/admin/login', { username: un, password: pw }).then(function (r) {
+      if (!r.ok) { $('login-btn').disabled = false; $('pw-err').textContent = r.j.error || 'เข้าสู่ระบบไม่สำเร็จ'; $('pw-err').hidden = false; $('pw').setAttribute('aria-invalid', 'true'); $('pw').focus(); return; }
+      try { localStorage.setItem('uni-admin-user', un); } catch (e) {}
       $('pw').value = '';
-      showApp();
+      enter().then(function () { $('login-btn').disabled = false; });
     });
   });
   $('pw').addEventListener('input', function () { $('pw-err').hidden = true; this.setAttribute('aria-invalid', 'false'); });
+  $('un').addEventListener('input', function () { $('pw-err').hidden = true; });
   $('logout').addEventListener('click', function () { send('POST', '/api/admin/logout').then(showLogin); });
 
   /* ---------- schedule ---------- */
@@ -328,7 +408,7 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
   }
   function slotState(c, h) {
     var s = slotMap[key(c, h)];
-    if (s) return s.kind === 'block' ? 'block' : 'booked';
+    if (s) return s.kind === 'customer' ? 'booked' : 'block';
     return isPast(active.iso, h) ? 'past' : 'free';
   }
   function renderGrid() {
@@ -346,7 +426,7 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
         var label = 'สนาม ' + c + ' ' + range(h) + ' ' + ({ free: 'ว่าง', booked: 'ลูกค้าจอง', block: 'ล็อกก๊วน', sel: 'เลือกแล้ว', past: 'เวลาผ่านไปแล้ว' })[st];
         var cur = detail === k ? ' aria-current="true"' : '';
         return '<button type="button" class="slot" data-s="' + st + '" data-c="' + c + '" data-h="' + h + '"' + cur + (st === 'past' ? ' disabled' : '') +
-          ' aria-label="' + label + '">' + (st === 'block' ? 'ก๊วน' : st === 'sel' ? '✓' : '') + '</button>';
+          ' aria-label="' + label + '">' + (st === 'block' ? (slotMap[k].kind === 'recurring' ? 'ประจำ' : 'ล็อก') : st === 'sel' ? '✓' : '') + '</button>';
       }).join('') + '</div>';
     }
     $('grid').innerHTML = html;
@@ -361,8 +441,14 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
     } else if (detail && slotMap[detail]) {
       var s = slotMap[detail], q = detail.split('|'), c = +q[0], h = +q[1];
       var head = '<h3 style="margin:0">สนาม ' + c + ' · ' + range(h) + ' · ' + dayShort(active.iso) + '</h3>';
-      if (s.kind === 'block') {
+      if (s.kind === 'recurring') {
+        p.innerHTML = '<div class="card">' + head + '<div class="kv"><span>ก๊วนประจำ</span><span>' + esc(s.note) + '</span></div>' +
+          '<div class="kv"><span>ล็อกทุก</span><span>วัน' + DOW_L[active.dow] + '</span></div>' +
+          '<p class="muted" style="margin:0">กด "งดเฉพาะวันนี้" ถ้าก๊วนไม่มาวันนี้ ช่องนี้จะว่างให้ลูกค้าจอง สัปดาห์อื่นยังล็อกเหมือนเดิม (ถ้าจะเลิกก๊วนถาวร ไปที่แท็บก๊วนประจำ)</p>' +
+          '<button type="button" class="btn danger" data-act="skip">งดเฉพาะวันนี้ (ปลดล็อก)</button></div>';
+      } else if (s.kind === 'block') {
         p.innerHTML = '<div class="card">' + head + '<div class="kv"><span>ล็อกไว้สำหรับ</span><span>' + esc(s.note || 'ล็อกโดยแอดมิน') + '</span></div>' +
+          (s.by ? '<div class="kv"><span>ล็อกโดย</span><span>' + esc(s.by) + '</span></div>' : '') +
           '<button type="button" class="btn danger" data-act="unlock">ปลดล็อกช่องนี้</button></div>';
       } else {
         p.innerHTML = '<div class="card">' + head +
@@ -373,6 +459,7 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
             : '<div class="kv"><span>สถานะ</span><span>รอชำระเงิน</span></div>') + '</div>';
       }
     } else p.innerHTML = '';
+    if (p.firstChild && p.scrollIntoView) { try { p.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {} }
   }
   function loadDay() {
     dayState = 'loading'; sel = {}; detail = null; renderGrid(); renderPanel();
@@ -409,6 +496,14 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
       send('POST', '/api/admin/lock', { slots: slots, note: note }).then(function (r) {
         if (!r.ok) { b.disabled = false; var e2 = $('lock-err'); e2.textContent = r.j.error || 'ล็อกไม่สำเร็จ'; e2.hidden = false; if (r.status === 409) loadDay(); return; }
         toast('ล็อกสนามแล้ว ' + slots.length + ' ช่อง'); loadDay();
+      });
+    }
+    if (act === 'skip') {
+      var rs = slotMap[detail]; if (!rs) return;
+      b.disabled = true;
+      send('POST', '/api/admin/unlock', { lockId: rs.lockId, d: active.iso }).then(function (r) {
+        if (!r.ok) { b.disabled = false; toast(r.j.error || 'ปลดล็อกไม่สำเร็จ'); return; }
+        toast('งดก๊วน "' + rs.note + '" วันนี้แล้ว ช่องว่างให้ลูกค้าจอง'); loadDay();
       });
     }
     if (act === 'unlock') {
@@ -449,6 +544,7 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
       rules = r.j.rules;
       draft = r.j.rules.map(function (x) { return { from: x.from, to: x.to, price: x.price }; });
       $('refund-h').value = r.j.refundHours;
+      $('adv-d').value = r.j.advanceDays;
       pricesLoaded = true; renderPrices();
     });
   }
@@ -482,6 +578,151 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
       if (!r.ok) { $('refund-err').textContent = r.j.error || 'บันทึกไม่สำเร็จ'; $('refund-err').hidden = false; return; }
       toast('บันทึกแล้ว ยกเลิกก่อน ' + n + ' ชั่วโมงถึงจะคืนเงิน');
     });
+  });
+
+  $('save-adv').addEventListener('click', function () {
+    var v = $('adv-d').value, n = parseInt(v, 10), okv = /^\d+$/.test(v) && n >= 1 && n <= 60;
+    $('adv-err').hidden = okv;
+    if (!okv) { $('adv-d').focus(); return; }
+    send('PUT', '/api/admin/prices', { advanceDays: n }).then(function (r) {
+      if (!r.ok) { $('adv-err').textContent = r.j.error || 'บันทึกไม่สำเร็จ'; $('adv-err').hidden = false; return; }
+      buildDays(n);
+      toast('บันทึกแล้ว ลูกค้าจองล่วงหน้าได้ ' + n + ' วัน');
+    });
+  });
+
+  /* ---------- groups (ก๊วนประจำ) ---------- */
+  var gCourts = {}, groups = [], gDel = null;
+  $('g-dow').innerHTML = [1, 2, 3, 4, 5, 6, 0].map(function (d) { return '<option value="' + d + '">วัน' + DOW_L[d] + '</option>'; }).join('');
+  $('g-from').innerHTML = HOURS.map(function (h) { return '<option value="' + h + '">' + h + ':00</option>'; }).join('');
+  function fillTo() {
+    var f = +$('g-from').value, cur = +$('g-to').value, h = '';
+    for (var t = f + 1; t <= 23; t++) h += '<option value="' + t + '">' + t + ':00</option>';
+    $('g-to').innerHTML = h;
+    $('g-to').value = cur > f ? cur : f + 1;
+  }
+  $('g-from').value = 18; fillTo(); $('g-to').value = 20;
+  $('g-from').addEventListener('change', fillTo);
+  function renderCourtBtns() {
+    var h = '';
+    for (var c = 1; c <= COURTS; c++) h += '<button type="button" class="cbtn" data-c="' + c + '" aria-pressed="' + !!gCourts[c] + '" aria-label="สนาม ' + c + '">' + c + '</button>';
+    $('g-courts').innerHTML = h;
+  }
+  renderCourtBtns();
+  $('g-courts').addEventListener('click', function (e) {
+    var b = e.target.closest('.cbtn'); if (!b) return;
+    var c = +b.dataset.c; if (gCourts[c]) delete gCourts[c]; else gCourts[c] = true;
+    $('g-err').hidden = true; renderCourtBtns();
+  });
+  function gErr(m) { $('g-err').textContent = m; $('g-err').hidden = !m; }
+  $('g-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var note = $('g-note').value.trim(), courts = Object.keys(gCourts).map(Number);
+    if (!note) { gErr('กรอกชื่อก๊วน'); $('g-note').focus(); return; }
+    if (!courts.length) { gErr('เลือกสนามอย่างน้อย 1 สนาม'); return; }
+    $('g-save').disabled = true;
+    send('POST', '/api/admin/recurring', { note: note, courts: courts, dow: +$('g-dow').value, from: +$('g-from').value, to: +$('g-to').value }).then(function (r) {
+      $('g-save').disabled = false;
+      if (!r.ok) { gErr(r.j.error || 'บันทึกไม่สำเร็จ'); return; }
+      gErr(''); $('g-note').value = ''; gCourts = {}; renderCourtBtns();
+      toast(r.j.conflicts ? 'บันทึกแล้ว แต่มีลูกค้าจองช่องนี้ไว้ก่อน ' + r.j.conflicts + ' ชั่วโมง (วันที่ ' + r.j.conflictDates.map(dayShort).join(', ') + ') ลูกค้ายังได้สนามตามเดิม' : 'บันทึกก๊วนประจำแล้ว ล็อกทุกสัปดาห์');
+      loadGroups();
+    });
+  });
+  function renderGroups() {
+    if (!groups.length) { $('g-list').innerHTML = '<li class="card"><b>ยังไม่มีก๊วนประจำ</b><span class="muted">เพิ่มด้านบน แล้วระบบจะล็อกให้ทุกสัปดาห์</span></li>'; return; }
+    $('g-list').innerHTML = groups.map(function (g) {
+      var act = gDel === g.id
+        ? '<div class="btns"><button type="button" class="btn ghost sm" data-gno="1">ไม่ลบ</button><button type="button" class="btn danger sm" data-gyes="' + g.id + '">ยืนยัน ลบก๊วนนี้</button></div>'
+        : '<button type="button" class="btn ghost sm" data-gdel="' + g.id + '">ลบก๊วนประจำนี้</button>';
+      var sk = g.skips.length ? '<div class="field"><span class="flabel">วันที่งด (แตะเพื่อล็อกคืน)</span><div class="skips">' +
+        g.skips.map(function (d) { return '<button type="button" class="skip" data-gid="' + g.id + '" data-gd="' + d + '">งด ' + esc(dayShort(d)) + ' ✕</button>'; }).join('') + '</div></div>' : '';
+      return '<li class="item"><div class="top2"><div><b>' + esc(g.note) + '</b><div class="muted">ทุกวัน' + DOW_L[g.dow] + ' · ' + g.from + ':00–' + g.to + ':00</div></div><span class="chip done">สนาม ' + g.c + '</span></div>' +
+        (g.by ? '<span class="who-chip">เพิ่มโดย ' + esc(g.by) + '</span>' : '') + sk + act + '</li>';
+    }).join('');
+  }
+  function loadGroups() {
+    return api('/api/admin/recurring', { cache: 'no-store' }).then(function (r) {
+      if (!r.ok) { $('g-list').innerHTML = '<li class="card"><span class="err">' + esc(r.j.error || 'โหลดไม่สำเร็จ') + '</span></li>'; return; }
+      groups = r.j.list; renderGroups();
+    });
+  }
+  $('g-list').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.gdel) { gDel = +b.dataset.gdel; renderGroups(); return; }
+    if (b.dataset.gno) { gDel = null; renderGroups(); return; }
+    if (b.dataset.gyes) {
+      b.disabled = true;
+      api('/api/admin/recurring?id=' + b.dataset.gyes, { method: 'DELETE' }).then(function (r) {
+        gDel = null;
+        toast(r.ok ? 'ลบก๊วนประจำแล้ว ช่องเหล่านั้นว่างให้ลูกค้าจอง' : (r.j.error || 'ลบไม่สำเร็จ'));
+        loadGroups();
+      });
+      return;
+    }
+    if (b.dataset.gd) {
+      b.disabled = true;
+      send('POST', '/api/admin/unlock', { lockId: +b.dataset.gid, d: b.dataset.gd, undo: true }).then(function (r) {
+        toast(r.ok ? 'ล็อกวันนั้นคืนให้ก๊วนแล้ว' : (r.j.error || 'ไม่สำเร็จ'));
+        loadGroups();
+      });
+    }
+  });
+
+  /* ---------- admins ---------- */
+  var admins = [], aAsk = null, aReset = null;
+  function aErr(m) { $('a-err').textContent = m; $('a-err').hidden = !m; }
+  function renderAdmins() {
+    var h = '<li class="item"><div class="top2"><div><b>admin</b><div class="muted">เจ้าของร้าน · รหัสผ่านตั้งใน Vercel (ADMIN_PASSWORD)</div></div><span class="chip done">ทำได้ทุกอย่าง</span></div></li>';
+    h += admins.map(function (a) {
+      var act;
+      if (aAsk === a.id) act = '<div class="btns"><button type="button" class="btn ghost sm" data-ano="1">ไม่ลบ</button><button type="button" class="btn danger sm" data-ayes="' + a.id + '">ยืนยัน ลบ ' + esc(a.username) + '</button></div>';
+      else if (aReset === a.id) act = '<div class="field"><label for="a-np">รหัสผ่านใหม่ของ ' + esc(a.username) + '</label><input class="in" id="a-np" type="text" autocomplete="new-password" maxlength="64"></div>' +
+        '<div class="btns"><button type="button" class="btn ghost sm" data-ano="1">ยกเลิก</button><button type="button" class="btn sm" data-aset="' + a.id + '">บันทึกรหัสใหม่</button></div>';
+      else act = '<div class="btns"><button type="button" class="btn ghost sm" data-areset="' + a.id + '">เปลี่ยนรหัสผ่าน</button><button type="button" class="btn ghost sm" data-adel="' + a.id + '">ลบแอดมิน</button></div>';
+      return '<li class="item"><div class="top2"><div><b>' + esc(a.username) + '</b><div class="muted">แอดมิน</div></div></div>' + act + '</li>';
+    }).join('');
+    $('a-list').innerHTML = h;
+  }
+  function loadAdmins() {
+    return api('/api/admin/admins', { cache: 'no-store' }).then(function (r) {
+      if (!r.ok) { $('a-list').innerHTML = '<li class="card"><span class="err">' + esc(r.j.error || 'โหลดไม่สำเร็จ') + '</span></li>'; return; }
+      admins = r.j.list; renderAdmins();
+    });
+  }
+  $('a-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var u = $('a-user').value.trim().toLowerCase(), pw = $('a-pass').value;
+    if (!/^[a-z0-9._-]{3,20}$/.test(u)) { aErr('ชื่อผู้ใช้ใช้ได้เฉพาะ a-z ตัวเลข . _ - ยาว 3-20 ตัว'); $('a-user').focus(); return; }
+    if (pw.length < 6) { aErr('รหัสผ่านต้องยาวอย่างน้อย 6 ตัว'); $('a-pass').focus(); return; }
+    $('a-save').disabled = true;
+    send('POST', '/api/admin/admins', { username: u, password: pw }).then(function (r) {
+      $('a-save').disabled = false;
+      if (!r.ok) { aErr(r.j.error || 'เพิ่มไม่สำเร็จ'); return; }
+      aErr(''); $('a-user').value = ''; $('a-pass').value = '';
+      toast('เพิ่มแอดมิน ' + u + ' แล้ว ส่งชื่อผู้ใช้และรหัสให้เขาได้เลย'); loadAdmins();
+    });
+  });
+  $('a-list').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.adel) { aAsk = +b.dataset.adel; aReset = null; renderAdmins(); return; }
+    if (b.dataset.areset) { aReset = +b.dataset.areset; aAsk = null; renderAdmins(); var np = $('a-np'); if (np) np.focus(); return; }
+    if (b.dataset.ano) { aAsk = aReset = null; renderAdmins(); return; }
+    if (b.dataset.ayes) {
+      b.disabled = true;
+      api('/api/admin/admins?id=' + b.dataset.ayes, { method: 'DELETE' }).then(function (r) {
+        aAsk = null; toast(r.ok ? 'ลบแอดมินแล้ว เข้าระบบไม่ได้อีก' : (r.j.error || 'ลบไม่สำเร็จ')); loadAdmins();
+      });
+      return;
+    }
+    if (b.dataset.aset) {
+      var pw = $('a-np').value;
+      if (pw.length < 6) { toast('รหัสผ่านต้องยาวอย่างน้อย 6 ตัว'); return; }
+      b.disabled = true;
+      send('PUT', '/api/admin/admins', { id: +b.dataset.aset, password: pw }).then(function (r) {
+        aReset = null; toast(r.ok ? 'เปลี่ยนรหัสผ่านแล้ว' : (r.j.error || 'เปลี่ยนไม่สำเร็จ')); loadAdmins();
+      });
+    }
   });
 
   /* ---------- refunds ---------- */
@@ -563,14 +804,18 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
   }
 
   /* ---------- tabs and routing ---------- */
-  var TABS = ['schedule', 'prices', 'refunds', 'revenue'];
+  var TABS = ['schedule', 'groups', 'refunds', 'prices', 'revenue', 'admins'];
+  var OWNER_TABS = ['prices', 'revenue', 'admins'];
   function setTab(t) {
+    if (!isOwner() && OWNER_TABS.indexOf(t) >= 0) t = 'schedule';
     TABS.forEach(function (n) { $('v-' + n).hidden = n !== t; });
     Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (b) { b.setAttribute('aria-pressed', String(b.dataset.tab === t)); });
     if (t === 'schedule') { renderDates(); loadDay(); }
     if (t === 'prices') loadPrices();
     if (t === 'refunds') loadRefunds();
     if (t === 'revenue') loadRevenue();
+    if (t === 'groups') loadGroups();
+    if (t === 'admins') loadAdmins();
   }
   function fromHash() { var t = location.hash.slice(1); setTab(TABS.indexOf(t) >= 0 ? t : 'schedule'); }
   document.querySelector('.tabs').addEventListener('click', function (e) {
@@ -580,6 +825,6 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
   window.addEventListener('hashchange', function () { if (!$('app').hidden) fromHash(); });
 
   // ถ้ายังมี session อยู่ (ล็อกอินไว้ภายใน 12 ชั่วโมง) เข้าหน้าหลังบ้านเลย
-  api('/api/admin/prices', { cache: 'no-store' }).then(function (r) { if (r.ok) showApp(); });
+  enter();
 })();
 </script>
