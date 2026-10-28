@@ -10,12 +10,12 @@ export const GET = adminGuard(async () => {
   const today = bkk().iso;
   const [locks, sk] = await Promise.all([
     loadRecurring(),
-    db().from('recurring_skips').select('lock_id,skip_date').gte('skip_date', today).order('skip_date'),
+    db().from('recurring_skips').select('lock_id,skip_date,skip_hour').gte('skip_date', today).order('skip_date').order('skip_hour'),
   ]);
   if (sk.error) throw sk.error;
   const list = locks.map((l) => ({
     id: l.id, dow: l.dow, c: l.court_id, from: l.start_hour, to: l.end_hour, note: l.note, by: l.created_by,
-    skips: sk.data.filter((s) => s.lock_id === l.id).map((s) => s.skip_date),
+    skips: sk.data.filter((s) => s.lock_id === l.id).map((s) => ({ d: s.skip_date, h: s.skip_hour })),
   }));
   return ok({ list, today });
 });

@@ -224,7 +224,7 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
 
     <section id="v-groups" hidden>
       <h2>ก๊วนประจำ</h2>
-      <p class="muted" style="margin-top:-4px">ล็อกสนามทุกสัปดาห์ไปเรื่อยๆ จนกว่าจะลบ ลูกค้าจะจองช่องนี้ไม่ได้ ถ้าสัปดาห์ไหนก๊วนไม่มา ไปที่แท็บตารางจอง แตะช่องของก๊วนวันนั้น แล้วกด "งดเฉพาะวันนี้"</p>
+      <p class="muted" style="margin-top:-4px">ล็อกสนามทุกสัปดาห์ไปเรื่อยๆ จนกว่าจะลบ ลูกค้าจะจองช่องนี้ไม่ได้ ถ้าสัปดาห์ไหนก๊วนไม่มา ไปที่แท็บตารางจอง แตะช่องของก๊วนวันนั้น แล้วกด "ปลดล็อกชั่วโมงนี้" หรือ "งดทั้งวัน"</p>
       <form class="card" id="g-form" novalidate>
         <h3 style="margin:0">เพิ่มก๊วนประจำ</h3>
         <div class="field"><label for="g-note">ชื่อก๊วน</label><input class="in" id="g-note" type="text" maxlength="40" placeholder="เช่น ก๊วนพี่เอ"></div>
@@ -444,8 +444,9 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
       if (s.kind === 'recurring') {
         p.innerHTML = '<div class="card">' + head + '<div class="kv"><span>ก๊วนประจำ</span><span>' + esc(s.note) + '</span></div>' +
           '<div class="kv"><span>ล็อกทุก</span><span>วัน' + DOW_L[active.dow] + '</span></div>' +
-          '<p class="muted" style="margin:0">กด "งดเฉพาะวันนี้" ถ้าก๊วนไม่มาวันนี้ ช่องนี้จะว่างให้ลูกค้าจอง สัปดาห์อื่นยังล็อกเหมือนเดิม (ถ้าจะเลิกก๊วนถาวร ไปที่แท็บก๊วนประจำ)</p>' +
-          '<button type="button" class="btn danger" data-act="skip">งดเฉพาะวันนี้ (ปลดล็อก)</button></div>';
+          '<p class="muted" style="margin:0">ถ้าวันนี้ก๊วนเล่นไม่ครบ กด "ปลดล็อกชั่วโมงนี้" ช่องนี้ช่องเดียวจะว่างให้ลูกค้าจอง ถ้าก๊วนไม่มาเลย กด "งดทั้งวัน" สัปดาห์อื่นยังล็อกเหมือนเดิม (ถ้าจะเลิกก๊วนถาวร ไปที่แท็บก๊วนประจำ)</p>' +
+          '<div class="btns"><button type="button" class="btn danger" data-act="skip" data-h="' + h + '">ปลดล็อกชั่วโมงนี้ (' + range(h) + ')</button>' +
+          '<button type="button" class="btn ghost" data-act="skip">งดทั้งวัน</button></div></div>';
       } else if (s.kind === 'block') {
         p.innerHTML = '<div class="card">' + head + '<div class="kv"><span>ล็อกไว้สำหรับ</span><span>' + esc(s.note || 'ล็อกโดยแอดมิน') + '</span></div>' +
           (s.by ? '<div class="kv"><span>ล็อกโดย</span><span>' + esc(s.by) + '</span></div>' : '') +
@@ -501,9 +502,10 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
     if (act === 'skip') {
       var rs = slotMap[detail]; if (!rs) return;
       b.disabled = true;
-      send('POST', '/api/admin/unlock', { lockId: rs.lockId, d: active.iso }).then(function (r) {
+      var oneH = b.dataset.h ? +b.dataset.h : null;
+      send('POST', '/api/admin/unlock', { lockId: rs.lockId, d: active.iso, h: oneH }).then(function (r) {
         if (!r.ok) { b.disabled = false; toast(r.j.error || 'ปลดล็อกไม่สำเร็จ'); return; }
-        toast('งดก๊วน "' + rs.note + '" วันนี้แล้ว ช่องว่างให้ลูกค้าจอง'); loadDay();
+        toast(oneH !== null ? 'ปลดล็อก ' + range(oneH) + ' แล้ว ช่องนี้ว่างให้ลูกค้าจอง' : 'งดก๊วน "' + rs.note + '" ทั้งวันแล้ว'); loadDay();
       });
     }
     if (act === 'unlock') {
@@ -636,7 +638,7 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
         ? '<div class="btns"><button type="button" class="btn ghost sm" data-gno="1">ไม่ลบ</button><button type="button" class="btn danger sm" data-gyes="' + g.id + '">ยืนยัน ลบก๊วนนี้</button></div>'
         : '<button type="button" class="btn ghost sm" data-gdel="' + g.id + '">ลบก๊วนประจำนี้</button>';
       var sk = g.skips.length ? '<div class="field"><span class="flabel">วันที่งด (แตะเพื่อล็อกคืน)</span><div class="skips">' +
-        g.skips.map(function (d) { return '<button type="button" class="skip" data-gid="' + g.id + '" data-gd="' + d + '">งด ' + esc(dayShort(d)) + ' ✕</button>'; }).join('') + '</div></div>' : '';
+        g.skips.map(function (x) { return '<button type="button" class="skip" data-gid="' + g.id + '" data-gd="' + x.d + '" data-gh="' + x.h + '">งด ' + esc(dayShort(x.d)) + (x.h >= 0 ? ' ' + range(x.h) : ' ทั้งวัน') + ' ✕</button>'; }).join('') + '</div></div>' : '';
       return '<li class="item"><div class="top2"><div><b>' + esc(g.note) + '</b><div class="muted">ทุกวัน' + DOW_L[g.dow] + ' · ' + g.from + ':00–' + g.to + ':00</div></div><span class="chip done">สนาม ' + g.c + '</span></div>' +
         (g.by ? '<span class="who-chip">เพิ่มโดย ' + esc(g.by) + '</span>' : '') + sk + act + '</li>';
     }).join('');
@@ -662,7 +664,7 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: right; font-variant-numeric: 
     }
     if (b.dataset.gd) {
       b.disabled = true;
-      send('POST', '/api/admin/unlock', { lockId: +b.dataset.gid, d: b.dataset.gd, undo: true }).then(function (r) {
+      send('POST', '/api/admin/unlock', { lockId: +b.dataset.gid, d: b.dataset.gd, h: +b.dataset.gh, undo: true }).then(function (r) {
         toast(r.ok ? 'ล็อกวันนั้นคืนให้ก๊วนแล้ว' : (r.j.error || 'ไม่สำเร็จ'));
         loadGroups();
       });
